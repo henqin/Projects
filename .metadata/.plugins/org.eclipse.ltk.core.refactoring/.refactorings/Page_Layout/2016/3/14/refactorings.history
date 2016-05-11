@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;counts&apos; in &apos;test.HeaderCutter.main(...)&apos; to &apos;counts_header&apos;&#x0D;&#x0A;- Original project: &apos;Page_Layout&apos;&#x0D;&#x0A;- Original element: &apos;test.HeaderCutter.main(String[]).counts&apos;&#x0D;&#x0A;- Renamed element: &apos;counts&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;counts&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;test{HeaderCutter.java[HeaderCutter~main~\[QString;@counts!189!232!193!198!\[I!0!false" name="counts_header" references="true" stamp="1459422407179" version="1.0"/>
+</session>

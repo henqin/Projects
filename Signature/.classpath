@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/opencv"/>
+	<classpathentry kind="lib" path="C:/Users/ATUL/Documents/work/Projects/jar_files/signature/sun-jai_codec.jar"/>
+	<classpathentry kind="lib" path="C:/Users/ATUL/Documents/work/Projects/jar_files/signature/sun-jai_core.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
