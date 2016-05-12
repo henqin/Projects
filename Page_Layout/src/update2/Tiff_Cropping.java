@@ -19,6 +19,7 @@ import com.abbyy.FREngine.BaseLanguageLetterSetEnum;
 import com.abbyy.FREngine.DictionaryTypeEnum;
 import com.abbyy.FREngine.Engine;
 import com.abbyy.FREngine.FREngineModuleEnum;
+import com.abbyy.FREngine.FileExportFormatEnum;
 import com.abbyy.FREngine.IBaseLanguage;
 import com.abbyy.FREngine.IDictionaryDescription;
 import com.abbyy.FREngine.IDictionaryDescriptions;
@@ -29,6 +30,7 @@ import com.abbyy.FREngine.IImage;
 import com.abbyy.FREngine.IImageDocument;
 import com.abbyy.FREngine.ILanguageDatabase;
 import com.abbyy.FREngine.IPageProcessingParams;
+import com.abbyy.FREngine.IPlainText;
 import com.abbyy.FREngine.IRecognizerParams;
 import com.abbyy.FREngine.ITextLanguage;
 import com.abbyy.FREngine.ImageFileFormatEnum;
@@ -93,7 +95,7 @@ public class Tiff_Cropping
 		}
 		return output;
 	}
-	
+
 	public List<String> pageNo(List<BufferedImage> input, String name)
 	{
 		List<String> output = new ArrayList<String>();
@@ -104,8 +106,8 @@ public class Tiff_Cropping
 			// Load the Engine
 			IEngineLoader engineloader = Engine.CreateEngineOutprocLoader();
 			IEngine engine = engineloader.GetEngineObject("SWTD-1000-0002-9871-8054-3276", null, null);
-			//SWTD-1000-0002-9871-8054-3276 char
-			//SWTD-1000-0002-9871-7227-8145 page
+			// SWTD-1000-0002-9871-8054-3276 char
+			// SWTD-1000-0002-9871-7227-8145 page
 			long b = System.currentTimeMillis();
 			System.out.println("Engine loading time = " + (b - a));
 
@@ -116,17 +118,30 @@ public class Tiff_Cropping
 
 				for (int i = 0; i < input.size(); i++)
 				{
-					IFRDocument document = engine.CreateFRDocument();
+					long aa = System.currentTimeMillis();
+					// IFRDocument document = engine.CreateFRDocument();
 					ImageIO.write(input.get(i), "tif",
 							new File("C:/Users/ATUL/Desktop/Abbyy/temp/" + name + "_" + (i + 1) + ".tif"));
-					document.AddImageFile(
-							"C:/Users/ATUL/Desktop/Abbyy/temp/" + name + "_" + (i + 1) + ".tif", null, null);
-					document.Process(null, null, null);
-					System.out.println("for page no "+(i+1)+" = "+document.getPlainText().getText());
+
+					IPlainText ip = engine.RecognizeImageAsPlainText(
+							"C:/Users/ATUL/Desktop/Abbyy/temp/" + name + "_" + (i + 1) + ".tif", null, null, null);
 					
-					output.add(document.getPlainText().getText());
-//					document.getPageFlushingPolicy();
-//					document.Release();
+					ip.SaveToAsciiXMLFile("C:/Users/ATUL/Desktop/Abbyy/ip-" + (i + 1) + ".xml");
+					
+//					System.out.println(ip.getText());
+
+					// document.AddImageFile(
+					// "C:/Users/ATUL/Desktop/Abbyy/temp/" + name + "_" + (i + 1) + ".tif", null, null);
+					// document.Process(null, null, null);
+					// System.out.println("for page no "+(i+1)+" = "+document.getPlainText().getText());
+					//
+					// document.Export("C:/Users/ATUL/Desktop/Abbyy/"+(i+1)+".xml", FileExportFormatEnum.FEF_XML, null);;
+
+					long bb = System.currentTimeMillis();
+					System.out.println("time for page no " + (i + 1) + " = " + (bb - aa));
+					// output.add(document.getPlainText().getText());
+					// document.getPageFlushingPolicy();
+					// document.Release();
 				}
 			} finally
 			{
@@ -146,59 +161,59 @@ public class Tiff_Cropping
 	{
 		Tiff_Cropping tc = new Tiff_Cropping();
 		String filename = FilenameUtils.removeExtension(tifffile.getName());
-		long a=System.currentTimeMillis();
-		System.out.println(filename+" is extracting...");
+		long a = System.currentTimeMillis();
+		System.out.println(filename + " is extracting...");
 		List<BufferedImage> images = tc.tiff_Extractor(tifffile);
-		long b=System.currentTimeMillis();
-		System.out.println(filename+" extracting time = "+(b-a));
-		
-		System.out.println(filename+" is deskewing...");
-//		List<BufferedImage> images = tc.deskew(input, filename);
-		long c=System.currentTimeMillis();
-		System.out.println(filename+" deskewing time = "+(c-b));
-		
+		long b = System.currentTimeMillis();
+		System.out.println(filename + " extracting time = " + (b - a));
+
+		System.out.println(filename + " is deskewing...");
+		// List<BufferedImage> images = tc.deskew(input, filename);
+		long c = System.currentTimeMillis();
+		System.out.println(filename + " deskewing time = " + (c - b));
+
 		List<BufferedImage> output = new ArrayList<BufferedImage>();
 
 		List<BufferedImage> pagenumber = new ArrayList<BufferedImage>();
-		
-		System.out.println(filename+" is cropping...");
-		for (int k = 0; k < images.size(); k++)
+
+		System.out.println(filename + " is cropping...");
+		for (int k = 53; k < 64; k++)
 		{
 			BufferedImage img = images.get(k);
 			Cropping_Points p = new Cropping_Points();
 			p = p.cutting_point(img);
-			
+
 			int midpoint = (p.getM1() + p.getM2()) / 2;
 
-//			if (p.getMidmaximun() >= (int) (0.008 * img.getWidth()) && p.getLine() == 0)
-//			{
-//				
-//				if ((p.getL2() - (int) (0.002 * img.getWidth())) > 0)
-//					p.setL2(p.getL2() - (int) (0.002 * img.getWidth()));
-//				output.add(img.getSubimage(p.getL2(), p.getY1(), midpoint - p.getL2(), p.getY2() - p.getY1()));
-//				System.out.println(filename + "_" + (k + 1) + " is cropped.and bottem y="+p.getY2());
-//			}
-//			else
-//			{
-//				output.add(img.getSubimage(p.getL2(), p.getY1(), p.getR1() - p.getL2(), p.getY2() - p.getY1()));
-//				System.out.println(filename + "_" + (k + 1) + " is not cropped.and bottem y="+p.getY2());
-//			}
-			
-			//for finding the pagenumber
-			int pX=(int) (img.getWidth()*0.75);
-			int pY=(int) (p.getY2()*0.95);
-			int pwidth=p.getR1()-pX;
-			int pheight=p.getY2()-pY;
-			pagenumber.add(img.getSubimage(pX,pY, pwidth, pheight));
+			if (p.getMidmaximun() >= (int) (0.008 * img.getWidth()) && p.getLine() == 0)
+			{
+
+				if ((p.getL2() - (int) (0.002 * img.getWidth())) > 0)
+					p.setL2(p.getL2() - (int) (0.002 * img.getWidth()));
+				output.add(img.getSubimage(p.getL2(), p.getY1(), midpoint - p.getL2(), p.getY2() - p.getY1()));
+				System.out.println(filename + "_" + (k + 1) + " is cropped.and bottem y=" + p.getY2());
+			}
+			else
+			{
+				output.add(img.getSubimage(p.getL2(), p.getY1(), p.getR1() - p.getL2(), p.getY2() - p.getY1()));
+				System.out.println(filename + "_" + (k + 1) + " is not cropped.and bottem y=" + p.getY2());
+			}
+
+			// for finding the pagenumber
+			int pX = (int) (img.getWidth() * 0.75);
+			int pY = (int) (p.getY2() * 0.95);
+			int pwidth = p.getR1() - pX;
+			int pheight = p.getY2() - pY;
+			pagenumber.add(img.getSubimage(pX, pY, pwidth, pheight));
 		}
-		long d=System.currentTimeMillis();
-		System.out.println(filename+" cropping time = "+(d-c));
-		
-		
-//		tc.tiff_Maker(output, result);
+		long d = System.currentTimeMillis();
+		System.out.println(filename + " cropping time = " + (d - c));
+
+		tc.tiff_Maker(output, result);
 		tc.tiff_Maker(pagenumber, "C:/Users/ATUL/Desktop/Page-layout/testing/output/"
 				+ FilenameUtils.removeExtension(tifffile.getName()) + "_bottem.tif");
-		tc.pageNo(pagenumber, filename);
+		// tc.pageNo(pagenumber, filename);
+		tc.pageNo(output, filename);
 	}
 
 	public void tiff_Maker(List<BufferedImage> output, String result) throws IOException

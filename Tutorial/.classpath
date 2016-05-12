@@ -37,5 +37,6 @@
 	<classpathentry kind="lib" path="C:/Tess4J/lib/slf4j-api-1.7.19.jar"/>
 	<classpathentry kind="lib" path="C:/Tess4J/lib/xmlgraphics-commons-1.5.jar"/>
 	<classpathentry kind="lib" path="C:/Tess4J/dist/tess4j-3.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/ATUL/Documents/work/Projects/jar_files/Tutorial/w3c-dom.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -242,7 +242,7 @@ class Cropping_Points
 
 		// for footer
 		int counts_footer[] = new int[img.getHeight()];
-		int y2f=img.getHeight();
+		int y2f = img.getHeight();
 		for (int i = 0; i < img.getHeight(); i++)
 		{
 			int count = 0;
@@ -256,8 +256,8 @@ class Cropping_Points
 			}
 			counts_footer[i] = count;
 		}
-		
-		for (int i = img.getHeight()-2; i >=0; i--)
+
+		for (int i = img.getHeight() - 2; i >= 0; i--)
 		{
 			if (counts_footer[i] != 0 && counts_footer[i - 1] != 0 && counts_footer[i - 2] != 0)
 			{
@@ -445,7 +445,7 @@ class Cropping_Points
 				}
 			}
 		}
-//		p.setY2(p.bottemY(img));
+		// p.setY2(p.bottemY(img));
 		p.setLine(line);
 		p.setL1(l1);
 		p.setL2(l2);
@@ -552,8 +552,8 @@ class Cropping_Points
 		{
 			PDFPage page = pdffile.getPage(i);
 
-			int w = 4 * (int) page.getBBox().getWidth();
-			int h = 4 * (int) page.getBBox().getHeight();
+			int w = 2 * (int) page.getBBox().getWidth();
+			int h = 2 * (int) page.getBBox().getHeight();
 
 			BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_BINARY);
 

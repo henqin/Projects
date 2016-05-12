@@ -19,6 +19,14 @@ import com.itextpdf.text.pdf.PdfDictionary;
 import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.pdf.PdfName;
 import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.FilteredTextRenderListener;
+import com.itextpdf.text.pdf.parser.LocationTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.itextpdf.text.pdf.parser.RegionTextRenderFilter;
+import com.itextpdf.text.pdf.parser.RenderFilter;
+import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
+
+
 
 public class Pdf_Cropping
 {
@@ -27,6 +35,111 @@ public class Pdf_Cropping
 		super();
 	}
 
+	public void cutter_For_PdfTopdf1111(File file, String target) throws Exception
+	{
+		Cropping_Points cp = new Cropping_Points();
+		cp.uncompressXRef(file.getAbsolutePath(), "C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
+		File temp = new File("C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
+
+		List<BufferedImage> images = cp.pdf_To_BufferedImage(temp);
+
+		InputStream inputstream = new FileInputStream(temp);
+		final PdfReader reader = new PdfReader(inputstream);
+
+		OutputStream targetStream = new FileOutputStream(target);
+		Document document = new Document();
+		PdfCopy copy = new PdfCopy(document, targetStream);
+		document.open();
+
+		for (int k = 0; k < images.size(); k++)
+		{
+
+			BufferedImage img = images.get(k);
+			Cropping_Points p = new Cropping_Points();
+
+			p = p.cutting_point(img);
+
+			if (p.getMidmaximun() >= (int) (0.009 * img.getWidth()) && p.getLine() == 0)
+			{
+				int midpoint = (p.getM1() + p.getM2()) / 2;
+				if ((p.getL2() - (int) (0.002 * img.getWidth())) > 0)
+					p.setL2(p.getL2() - (int) (0.002 * img.getWidth()));
+
+				PdfDictionary pageN = reader.getPageN(k + 1);
+				Rectangle cropBox = reader.getCropBox(k + 1);
+
+				PdfArray leftBox = new PdfArray(new float[] { p.getL2()/2, cropBox.getBottom(), midpoint/2,
+						cropBox.getTop() - p.getY1()/2 });
+
+				PdfImportedPage importedPage = copy.getImportedPage(reader, k + 1);
+				pageN.put(PdfName.CROPBOX, leftBox);
+				copy.addPage(importedPage);
+				System.out.println("page " + (k + 1) + " is cropped.and y1 = " + p.getY1());
+
+				// System.out.println(" width=" + img.getWidth());
+				// System.out.println("left margin left  " + (k + 1) + "=" + p.getL1());
+				// System.out.println("left margin right " + (k + 1) + "=" + p.getL2());
+				// System.out.println("middle margin left  " + (k + 1) + "=" + p.getM1());
+				// System.out.println("middle margin right " + (k + 1) + "=" + p.getM2());
+				// System.out.println("right margin left  " + (k + 1) + "=" + p.getR1());
+				// System.out.println("right margin right " + (k + 1) + "=" + p.getR2());
+				// System.out.println("middle margin lenght" + (k + 1) + "=" + p.getMidmaximun());
+				// System.o0ut.println("---------------------------------------------------------------------");
+
+				// -----------------------------------------------------------------------------------------
+				// BufferedImage dest = img.getSubimage(p.getM1(), 0, p.getM2() - p.getM1(), img.getHeight());
+				// ImageIO.write(dest, "jpg", new File("C:/Users/ATUL/Desktop/Page-layout/skip_mid/output" + (k + 1)
+				// + "-middle-skip.jpg"));
+				//
+				// dest = img.getSubimage(0, 0, p.getL2(), img.getHeight());
+				// ImageIO.write(dest, "jpg", new File("C:/Users/ATUL/Desktop/Page-layout/skip_left/output" + (k + 1)
+				// + "-left-skip.jpg"));
+				// dest = img.getSubimage(p.getR1(), 0, img.getWidth() - p.getR1(), img.getHeight());
+				// ImageIO.write(dest, "jpg", new File("C:/Users/ATUL/Desktop/Page-layout/skip_right/output" + (k + 1)
+				// + "-right-skip.jpg"));
+			}
+			else
+			{
+				PdfDictionary pageN = reader.getPageN(k + 1);
+				Rectangle cropBox = reader.getCropBox(k + 1);
+
+				PdfArray leftBox = new PdfArray(new float[] { p.getL2()/2, cropBox.getBottom(), p.getR1()/2,
+						cropBox.getTop() - p.getY1()/2 });
+
+				PdfImportedPage importedPage = copy.getImportedPage(reader, k + 1);
+				pageN.put(PdfName.CROPBOX, leftBox);
+				copy.addPage(importedPage);
+				System.out.println("page " + (k + 1) + " is not cropped.and y1 = " + p.getY1());
+
+				// -----------------------------------------------------------------------------------------
+				// System.out.println("width=" + (int) (0.01 * img.getWidth()));
+				// System.out.println("middle margin left  " + (k + 1) + "=" + p.getM1());
+				// System.out.println("middle margin right " + (k + 1) + "=" + p.getM2());
+				// System.out.println("middle margin lenght" + (k + 1) + "=" + p.getMidmaximun());
+				// System.out.println("---------------------------------------------------------------------");
+			}
+		}
+		document.close();
+		targetStream.close();
+		reader.close();
+		inputstream.close();
+//		temp.delete();
+		images.clear();
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public void cutter_For_PdfTopdf(File file, String target) throws Exception
 	{
 		Cropping_Points cp = new Cropping_Points();
@@ -43,7 +156,7 @@ public class Pdf_Cropping
 		PdfCopy copy = new PdfCopy(document, targetStream);
 		document.open();
 
-		for (int k = 0; k < images.size(); k++)
+		for (int k = 0; k <reader.getNumberOfPages(); /*images.size();*/ k++)
 		{
 			BufferedImage img = images.get(k);
 			Cropping_Points p = new Cropping_Points();
@@ -53,26 +166,64 @@ public class Pdf_Cropping
 				int midpoint = (p.getM1() + p.getM2()) / 2;
 				if ((p.getL2() - (int) (0.002 * img.getWidth())) > 0)
 					p.setL2(p.getL2() - (int) (0.002 * img.getWidth()));
+
 				PdfDictionary pageN = reader.getPageN(k + 1);
 				Rectangle cropBox = reader.getCropBox(k + 1);
+
 				PdfArray leftBox = new PdfArray(new float[] { p.getL2()/2, cropBox.getBottom(), midpoint/2,
 						cropBox.getTop() - p.getY1()/2 });
+
 				PdfImportedPage importedPage = copy.getImportedPage(reader, k + 1);
 				pageN.put(PdfName.CROPBOX, leftBox);
 				copy.addPage(importedPage);
 				System.out.println("page " + (k + 1) + " is cropped.and y1 = " + p.getY1());
+				
+				leftBox.remove(0);
+				importedPage.reset();
+				leftBox = new PdfArray(new float[] { cropBox.getLeft(), cropBox.getBottom(), cropBox.getRight(),
+						(float) (cropBox.getTop() -(cropBox.getTop()*.85))});
+				importedPage = copy.getImportedPage(reader, k + 1);
+				pageN.put(PdfName.CROPBOX, leftBox);
+				copy.addPage(importedPage);
 			}
 			else
 			{
 				PdfDictionary pageN = reader.getPageN(k + 1);
 				Rectangle cropBox = reader.getCropBox(k + 1);
-				PdfArray leftBox = new PdfArray(new float[] { p.getL2()/2, cropBox.getBottom(), p.getR1()/2,
+				PdfArray leftBox = new PdfArray(new float[] { cropBox.getLeft(), cropBox.getBottom(), p.getR1(),
 						cropBox.getTop() - p.getY1()/2 });
 				PdfImportedPage importedPage = copy.getImportedPage(reader, k + 1);
 				pageN.put(PdfName.CROPBOX, leftBox);
 				copy.addPage(importedPage);
 				System.out.println("page " + (k + 1) + " is not cropped.and y1 = " + p.getY1());
 			}
+			
+			
+//			PdfDictionary pageN = reader.getPageN(k + 1);
+			Rectangle cropBox = reader.getCropBox(k + 1);
+//			PdfArray leftBox = new PdfArray(new float[] { cropBox.getLeft(), cropBox.getBottom(), cropBox.getRight(),
+//					(float) (cropBox.getTop() -(cropBox.getTop()*.85))});
+//			PdfImportedPage importedPage = copy.getImportedPage(reader, k + 1);
+//			pageN.put(PdfName.CROPBOX, leftBox);
+//			copy.addPage(importedPage);
+//			
+//			
+            System.out.println("Page number: " + (k+1));
+
+            int x=(int) cropBox.getLeft();
+            int y=(int) cropBox.getBottom();
+            int width=(int) cropBox.getRight();
+            int height=(int)(cropBox.getTop() -(cropBox.getTop()*.85)) ;
+            
+            final Rectangle selection = new Rectangle(x, y, width, height);
+            final RenderFilter renderFilter = new RegionTextRenderFilter(selection);
+            final LocationTextExtractionStrategy delegate 
+                    = new LocationTextExtractionStrategy();
+            final TextExtractionStrategy extractionStrategy 
+                    = new FilteredTextRenderListener(delegate, renderFilter);
+            String text = PdfTextExtractor.getTextFromPage(reader, k+1, 
+                                                    extractionStrategy);
+            System.out.println(text);
 		}
 		document.close();
 		targetStream.close();

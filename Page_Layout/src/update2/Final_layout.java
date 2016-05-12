@@ -34,8 +34,8 @@ public class Final_layout
 						+ "_English.pdf";
 
 				Pdf_Cropping pc = new Pdf_Cropping();
-				pc.cutter_For_PdfToTiff(f, output);
-//				pc.cutter_For_PdfTopdf(f, output);
+//				pc.cutter_For_PdfToTiff(f, output);
+				pc.cutter_For_PdfTopdf(f, output);
 				long end = System.currentTimeMillis();
 				System.out.println("output file is - " + output);
 				System.out.println("and time = " + (end - start));
