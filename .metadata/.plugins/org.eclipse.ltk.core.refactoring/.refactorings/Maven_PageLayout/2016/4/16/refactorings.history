@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring accessors="true" comment="Delete element from project &apos;Maven_PageLayout&apos;&#x0D;&#x0A;- Original project: &apos;Maven_PageLayout&apos;&#x0D;&#x0A;- Original element: &apos;com.tbits.test.RdcaImageInfo.java&apos;" description="Delete element" element1="/src\/main\/java&lt;com.tbits.test{RdcaImageInfo.java" elements="1" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1460436523164" subPackages="false" version="1.0"/>
-</session>

@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Copy element &apos;Read.java&apos; to &apos;Page_Layout/src/test&apos;&#x0D;&#x0A;- Original project: &apos;AbbyFineReader&apos;&#x0D;&#x0A;- Destination element: &apos;Page_Layout/src/test&apos;&#x0D;&#x0A;- Original element: &apos;test.Read.java&apos;" description="Copy compilation unit" destination="=Page_Layout/src&lt;test" element1="/src&lt;test{Read.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1461157259503" units="1" version="1.0"/>
-</session>
