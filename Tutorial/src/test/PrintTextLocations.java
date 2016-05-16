@@ -10,6 +10,7 @@ import org.apache.pdfbox.exceptions.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.apache.pdfbox.util.TextPosition;
 
@@ -25,6 +26,8 @@ public class PrintTextLocations extends PDFTextStripper
 	public static boolean lineMatch;
 	public static int pageNo = 1;
 	public static double lastYVal;
+	
+	static Matrix m=null;
 
 	public PrintTextLocations() throws IOException
 	{
@@ -59,6 +62,12 @@ public class PrintTextLocations extends PDFTextStripper
 				pageNo += 1;
 				//break;
 			}
+			
+			System.out.println();
+//			for (int i = 0; i < m.length; i++)
+//			{
+//				
+//			}
 		} finally
 		{
 			if (document != null)
@@ -144,11 +153,14 @@ public class PrintTextLocations extends PDFTextStripper
 	protected void processTextPosition(TextPosition text)
 	{
 		String tChar = text.getCharacter();
-		// System.out.println("String[" + text.getXDirAdj() + "," + text.getYDirAdj() + " fs=" + text.getFontSize() + " xscale="
-		// + text.getXScale() + " height=" + text.getHeightDir() + " space=" + text.getWidthOfSpace() + " width="
-		// + text.getWidthDirAdj() + "]" + text.getCharacter());
+		 System.out.println("String[" + text.getXDirAdj() + "," + text.getYDirAdj() + " fs=" + text.getFontSize() + " xscale="
+		 + text.getXScale() + " height=" + text.getHeightDir() + " space=" + text.getWidthOfSpace() + " width="
+		 + text.getWidthDirAdj() + "]----------------" + text.getCharacter());
 		String REGEX = "[,.\\[\\](:*;!?)/]";
 		char c = tChar.charAt(0);
+		
+		m=text.getTextPos();
+		
 		lineMatch = matchCharLine(text);
 		if ((!tChar.matches(REGEX)) && (!Character.isWhitespace(c)))
 		{

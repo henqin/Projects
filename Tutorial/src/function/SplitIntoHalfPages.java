@@ -76,6 +76,7 @@ public class SplitIntoHalfPages
 
 				PdfDictionary pageN = reader.getPageN(page);
 				Rectangle cropBox = reader.getCropBox(page);
+				
 				PdfArray leftBox = new PdfArray(new float[] { cropBox.getLeft(), cropBox.getBottom(), cropBox.getRight() / 2,
 						cropBox.getTop() });
 				PdfArray rightBox = new PdfArray(new float[] { cropBox.getRight() / 2, cropBox.getBottom(), cropBox.getRight(),
@@ -85,6 +86,7 @@ public class SplitIntoHalfPages
 				pageN.put(PdfName.CROPBOX, leftBox);
 				c1.addPage(importedPage);
 				c1.clearTextWrap();
+				
 				pageN.put(PdfName.CROPBOX, rightBox);
 				c2.addPage(importedPage);
 				c2.clearTextWrap();

@@ -102,7 +102,7 @@ public class testing
 				
 				
 				//for layout
-				ILayout il=Engine.CreateLayout();
+//				ILayout il=Engine.CreateLayout();
 				
 				
 				// Process images
