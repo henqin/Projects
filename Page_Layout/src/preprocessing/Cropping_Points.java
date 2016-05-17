@@ -41,16 +41,16 @@ class Cropping_Points
 		super();
 	}
 
-	private int l1 = 0, l2 = 0, m1 = 0, m2 = 0, y1 = 0, y2 = 0, r1 = 0, r2 = 0, line = 0, midmaximun = Integer.MIN_VALUE;
+	private int midpoint = 0, y1 = 0, y2 = 0, line = 0, midmaximun = Integer.MIN_VALUE;
 
-	public int getY2()
+	public int getMidpoint()
 	{
-		return y2;
+		return midpoint;
 	}
 
-	public void setY2(int y2)
+	public void setMidpoint(int midpoint)
 	{
-		this.y2 = y2;
+		this.midpoint = midpoint;
 	}
 
 	public int getY1()
@@ -61,6 +61,16 @@ class Cropping_Points
 	public void setY1(int y1)
 	{
 		this.y1 = y1;
+	}
+
+	public int getY2()
+	{
+		return y2;
+	}
+
+	public void setY2(int y2)
+	{
+		this.y2 = y2;
 	}
 
 	public int getLine()
@@ -83,183 +93,33 @@ class Cropping_Points
 		this.midmaximun = midmaximun;
 	}
 
-	public int getL1()
+	public Cropping_Points cutting_point(BufferedImage bufferedImage) throws IOException
 	{
-		return l1;
-	}
+		int imgWidth = bufferedImage.getWidth();
+		int imgHeight = bufferedImage.getHeight();
 
-	public void setL1(int l1)
-	{
-		this.l1 = l1;
-	}
-
-	public int getL2()
-	{
-		return l2;
-	}
-
-	public void setL2(int l2)
-	{
-		this.l2 = l2;
-	}
-
-	public int getM1()
-	{
-		return m1;
-	}
-
-	public void setM1(int m1)
-	{
-		this.m1 = m1;
-	}
-
-	public int getM2()
-	{
-		return m2;
-	}
-
-	public void setM2(int m2)
-	{
-		this.m2 = m2;
-	}
-
-	public int getR1()
-	{
-		return r1;
-	}
-
-	public void setR1(int r1)
-	{
-		this.r1 = r1;
-	}
-
-	public int getR2()
-	{
-		return r2;
-	}
-
-	public void setR2(int r2)
-	{
-		this.r2 = r2;
-	}
-
-	public int line(BufferedImage img)
-	{
-		int line = 0;
-
-		for (int i = (int) (0.0 * img.getWidth()); i < (int) (0.9 * img.getWidth()); i++)
-		{
-
-			for (int j = (int) (0.0 * img.getHeight()); j < (int) (0.6 * img.getHeight()); j++)
-			{
-				// System.out.println("i = "+ i+" j = "+j);
-				Color c1 = new Color(img.getRGB(i, j));
-				Color c2 = new Color(img.getRGB(i + 1, j));
-				Color c3 = new Color(img.getRGB(i + 2, j));
-				Color c4 = new Color(img.getRGB(i + 3, j));
-
-				int count = 0;
-				int flag = 0;
-
-				while ((c1.getRed() <= 240 && c1.getBlue() <= 240 && c1.getGreen() <= 240)
-						|| (c2.getRed() <= 240 && c2.getBlue() <= 240 && c2.getGreen() <= 240)
-						|| (c3.getRed() <= 240 && c3.getBlue() <= 240 && c3.getGreen() <= 240)
-						|| (c4.getRed() <= 240 && c4.getBlue() <= 240 && c4.getGreen() <= 240)
-								&& j < (int) (0.60 * img.getHeight()))
-				{
-					flag = 1;
-					count++;
-					j++;
-					c1 = new Color(img.getRGB(i, j));
-					c2 = new Color(img.getRGB(i + 1, j));
-					c3 = new Color(img.getRGB(i + 2, j));
-					c4 = new Color(img.getRGB(i + 3, j));
-				}
-
-				if (flag == 1)
-					j--;
-
-				if (count > (int) (0.1 * img.getHeight()))
-				{
-					line++;
-					i = i + 6;
-					break;
-				}
-			}
-		}
-
-		return line;
-	}
-
-	public Cropping_Points cutting_point(BufferedImage img) throws IOException
-	{
 		Cropping_Points p = new Cropping_Points();
 
-		// for header
-		int counts_header[] = new int[img.getHeight()];
-		int y1 = 0;
-
-		for (int i = 0; i < img.getHeight() / 4; i++)
-		{
-			int count = 0;
-			for (int j = (int) (0.05 * img.getWidth()); j < (int) (0.25 * img.getWidth()); j++)
-			{
-				Color c = new Color(img.getRGB(j, i));
-				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
-				{
-					count++;
-				}
-			}
-			counts_header[i] = count;
-		}
-		for (int i = 0; i < img.getHeight() / 4; i++)
-		{
-			int count = 0;
-			for (int j = (int) (0.65 * img.getWidth()); j < (int) (0.75 * img.getWidth()); j++)
-			{
-				Color c = new Color(img.getRGB(j, i));
-				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
-				{
-					count++;
-				}
-			}
-			counts_header[i] = counts_header[i] + count;
-		}
-
-		for (int i = 0; i < (img.getHeight() / 4) - 4; i++)
-		{
-			if (counts_header[i] != 0 && counts_header[i + 1] != 0 && counts_header[i + 2] != 0)
-			{
-				y1 = i;
-				break;
-			}
-		}
-		if (y1 - 2 >= 0)
-		{
-			y1 = y1 - 2;
-		}
-		p.setY1(y1);
-
 		// for footer
-		int counts_footer[] = new int[img.getHeight()];
-		int y2f = img.getHeight();
-		for (int i = 0; i < img.getHeight(); i++)
+		int horizontal[] = new int[imgHeight];
+		int y2f = imgHeight;
+		for (int i = 0; i < imgHeight; i++)
 		{
 			int count = 0;
-			for (int j = (int) (0.75 * img.getWidth()); j < (int) (img.getWidth()); j++)
+			for (int j = (int) (0.15 * imgWidth); j < (int) (0.35 * imgWidth); j++)
 			{
-				Color c = new Color(img.getRGB(j, i));
+				Color c = new Color(bufferedImage.getRGB(j, i));
 				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
 				{
 					count++;
 				}
 			}
-			counts_footer[i] = count;
+			horizontal[i] = count;
 		}
 
-		for (int i = img.getHeight() - 2; i >= 0; i--)
+		for (int i = imgHeight - 2; i >= 0; i--)
 		{
-			if (counts_footer[i] != 0 && counts_footer[i - 1] != 0 && counts_footer[i - 2] != 0)
+			if (horizontal[i] != 0 && horizontal[i - 1] != 0 && horizontal[i - 2] != 0 && horizontal[i - 3] != 0)
 			{
 				y2f = i;
 				break;
@@ -267,123 +127,70 @@ class Cropping_Points
 		}
 		p.setY2(y2f);
 
+		for (int i = y2f; i >= 0; i--)
+		{
+			if (horizontal[i] == 0 && horizontal[i - 1] == 0 && horizontal[i - 2] == 0 && horizontal[i - 3] == 0)
+			{
+				y2f = i - 3;
+				break;
+			}
+		}
+		p.setY1(y2f);
+
 		// for vertical cropping
-
-		int counts[] = new int[img.getWidth()];
-		for (int i = 0; i < img.getWidth(); i++)
+		int vertical[] = new int[imgWidth];
+		for (int i = 0; i < imgWidth; i++)
 		{
 			int count = 0;
-			for (int j = y1; j < (int) (0.40 * img.getHeight()); j++)
+			for (int j = 0; j < (int) (0.40 * imgHeight); j++)
 			{
-				Color c = new Color(img.getRGB(i, j));
+				Color c = new Color(bufferedImage.getRGB(i, j));
 				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
 				{
 					count++;
 				}
 			}
-			counts[i] = count;
+			vertical[i] = count;
 		}
 
-		for (int i = 0; i < (int) (0.20 * img.getWidth()); i++)
+		for (int i = 0; i < (int) (0.20 * imgWidth); i++)
 		{
 			int count = 0;
-			for (int j = (int) (0.40 * img.getHeight()); j < (int) (0.98 * img.getHeight()); j++)
+			for (int j = (int) (0.40 * imgHeight); j < (int) (0.98 * imgHeight); j++)
 			{
-				Color c = new Color(img.getRGB(i, j));
+				Color c = new Color(bufferedImage.getRGB(i, j));
 				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
 				{
 					count++;
 				}
 			}
-			counts[i] = counts[i] + count;
+			vertical[i] = vertical[i] + count;
 		}
 
-		for (int i = (int) (0.80 * img.getWidth()); i < img.getWidth(); i++)
+		for (int i = (int) (0.80 * imgWidth); i < imgWidth; i++)
 		{
 			int count = 0;
-			for (int j = (int) (0.40 * img.getHeight()); j < (int) (0.98 * img.getHeight()); j++)
+			for (int j = (int) (0.40 * imgHeight); j < (int) (0.98 * imgHeight); j++)
 			{
-				Color c = new Color(img.getRGB(i, j));
+				Color c = new Color(bufferedImage.getRGB(i, j));
 				if (c.getRed() <= 240 && c.getBlue() <= 240 && c.getGreen() <= 240)
 				{
 					count++;
 				}
 			}
-			counts[i] = counts[i] + count;
+			vertical[i] = vertical[i] + count;
 		}
 
-		// for left margin------
+		// for middle margin
 		int lenth, temp;
-		int l1 = 0, l2 = 0;
-		int maximun = Integer.MIN_VALUE;
-		for (int i = 0; i < (int) (0.20 * img.getWidth()); i++)
-		{
-			lenth = 0;
-			temp = i;
-			int flag = 0;
-			while (counts[temp] == 0 && temp < (int) (0.15 * img.getWidth()))
-			{
-				lenth++;
-				temp++;
-				flag = 1;
-			}
-			if (flag == 1)
-			{
-				temp--;
-			}
-			if (lenth > maximun)
-			{
-				maximun = lenth;
-				l1 = i;
-				l2 = temp;
-				if (temp < 0)
-				{
-					l2 = 0;
-				}
-			}
-			i = temp;
-		}
-
-		// for right margin------
-		int r1 = 0, r2 = 0;
-		maximun = Integer.MIN_VALUE;
-		for (int i = img.getWidth() - 1; i > (int) (0.80 * img.getWidth()); i--)
-		{
-			lenth = 0;
-			temp = i;
-			int flag = 0;
-			while (counts[temp] == 0 && temp > (int) (0.85 * img.getWidth()))
-			{
-				lenth++;
-				temp--;
-				flag = 1;
-			}
-			if (flag == 1)
-			{
-				temp++;
-			}
-			if (lenth > maximun)
-			{
-				maximun = lenth;
-				r2 = i;
-				r1 = temp;
-				if (temp > img.getWidth())
-				{
-					r2 = img.getWidth();
-				}
-			}
-			i = temp;
-		}
-
-		// for middle
 		int m1 = 0, m2 = 0;
 		int midmaximun = Integer.MIN_VALUE;
-		for (int i = (int) (0.40 * img.getWidth()); i < (int) (0.60 * img.getWidth()); i++)
+		for (int i = (int) (0.40 * imgWidth); i < (int) (0.60 * imgWidth); i++)
 		{
 			lenth = 0;
 			temp = i;
 			int flag = 0;
-			while (counts[temp] == 0 && temp < (int) (0.60 * img.getWidth()))
+			while ((vertical[temp] == 0 || vertical[temp + 2] == 0 || vertical[temp + 5] == 0) && temp < (int) (0.60 * imgWidth))
 			{
 				lenth++;
 				temp++;
@@ -405,16 +212,26 @@ class Cropping_Points
 			}
 			i = temp;
 		}
-
-		int line = 0;
-		for (int i = (int) (0.30 * img.getWidth()); i < (int) (0.70 * img.getWidth()); i++)
+		if (m1 == 0 || m2 == 0)
 		{
-			for (int j = (int) (0.1 * img.getHeight()); j < (int) (0.6 * img.getHeight()); j++)
+			p.setMidpoint(imgWidth / 2);
+		}
+		else
+		{
+			p.setMidpoint((m1 + m2) / 2);
+		}
+		p.setMidmaximun(midmaximun + 1);
+
+		// for counting vertical lines to detect the tables.
+		int line = 0;
+		for (int i = (int) (0.30 * imgWidth); i < (int) (0.70 * imgWidth); i++)
+		{
+			for (int j = (int) (0.1 * imgHeight); j < (int) (0.6 * imgHeight); j++)
 			{
-				Color c1 = new Color(img.getRGB(i, j));
-				Color c2 = new Color(img.getRGB(i + 1, j));
-				Color c3 = new Color(img.getRGB(i + 2, j));
-				Color c4 = new Color(img.getRGB(i + 3, j));
+				Color c1 = new Color(bufferedImage.getRGB(i, j));
+				Color c2 = new Color(bufferedImage.getRGB(i + 1, j));
+				Color c3 = new Color(bufferedImage.getRGB(i + 2, j));
+				Color c4 = new Color(bufferedImage.getRGB(i + 3, j));
 
 				int count = 0;
 				int flag = 0;
@@ -422,22 +239,21 @@ class Cropping_Points
 				while ((c1.getRed() <= 240 && c1.getBlue() <= 240 && c1.getGreen() <= 240)
 						|| (c2.getRed() <= 240 && c2.getBlue() <= 240 && c2.getGreen() <= 240)
 						|| (c3.getRed() <= 240 && c3.getBlue() <= 240 && c3.getGreen() <= 240)
-						|| (c4.getRed() <= 240 && c4.getBlue() <= 240 && c4.getGreen() <= 240)
-								&& j < (int) (0.60 * img.getHeight()))
+						|| (c4.getRed() <= 240 && c4.getBlue() <= 240 && c4.getGreen() <= 240) && j < (int) (0.60 * imgHeight))
 				{
 					flag = 1;
 					count++;
 					j++;
-					c1 = new Color(img.getRGB(i, j));
-					c2 = new Color(img.getRGB(i + 1, j));
-					c3 = new Color(img.getRGB(i + 2, j));
-					c4 = new Color(img.getRGB(i + 3, j));
+					c1 = new Color(bufferedImage.getRGB(i, j));
+					c2 = new Color(bufferedImage.getRGB(i + 1, j));
+					c3 = new Color(bufferedImage.getRGB(i + 2, j));
+					c4 = new Color(bufferedImage.getRGB(i + 3, j));
 				}
 				if (flag == 1)
 				{
 					j--;
 				}
-				if (count > (int) (0.1 * img.getHeight()))
+				if (count > (int) (0.1 * imgHeight))
 				{
 					line++;
 					i = i + 6;
@@ -445,16 +261,8 @@ class Cropping_Points
 				}
 			}
 		}
-		// p.setY2(p.bottemY(img));
 		p.setLine(line);
-		p.setL1(l1);
-		p.setL2(l2);
-		p.setM1(m1);
-		p.setM2(m2);
-		p.setR1(r1);
-		p.setR2(r2);
-		p.setMidmaximun(midmaximun + 1);
-		counts = null;
+
 		return p;
 	}
 
@@ -652,4 +460,5 @@ class Cropping_Points
 			y = img.getHeight();
 		return y;
 	}
+
 }

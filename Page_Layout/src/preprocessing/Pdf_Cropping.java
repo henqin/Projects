@@ -9,7 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -19,14 +19,16 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
-import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfArray;
-import com.itextpdf.text.pdf.PdfCopy;
-import com.itextpdf.text.pdf.PdfDictionary;
-import com.itextpdf.text.pdf.PdfImportedPage;
-import com.itextpdf.text.pdf.PdfName;
 import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.FilteredTextRenderListener;
+import com.itextpdf.text.pdf.parser.LocationTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.itextpdf.text.pdf.parser.RegionTextRenderFilter;
+import com.itextpdf.text.pdf.parser.RenderFilter;
+import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 
@@ -57,58 +59,48 @@ public class Pdf_Cropping
 			document = PDDocument.load(temp);
 			List allPages = document.getDocumentCatalog().getAllPages();
 
+			InputStream inputstream = new FileInputStream(temp);
+			PdfReader reader = new PdfReader(inputstream);
+
 			// iterate through the number of pages
 			for (int i = 1; i <= pdffile.getNumPages(); i++)
 			{
-				System.out.println("page " + (i) + " is processing...");
-				BufferedImage img = pdfcrop.pdfPageToBufferedImage(pdffile.getPage(i));
-				Boolean hasimage = pdfcrop.pageHasImage((PDPage) allPages.get(i - 1));
+				System.out.println("Page " + (i) + " is processing...");
+				PDPage pdpage = (PDPage) allPages.get(i - 1);
+				Boolean isImage = pdfcrop.pageHasImage(pdpage);
 
-				RdcaPreProcessData rdca = new RdcaPreProcessData();
+				BufferedImage bufferedImage = pdfcrop.pdfPageToBufferedImage(pdffile.getPage(i));
+
 				Cropping_Points p = new Cropping_Points();
 
-				p = p.cutting_point(img);
-				if (p.getMidmaximun() >= (int) (0.009 * img.getWidth()) && p.getLine() == 0)
-				{
-					int midpoint = (p.getM1() + p.getM2()) / 2;
-					System.out.println("page is cropped.");
+				p = p.cutting_point(bufferedImage);
 
-					rdca.setPhysicalPageNo(i);
-					rdca.setActionid(null);
-					rdca.setRequestid(null);
-					rdca.setPageHasImage(hasimage);
-					rdca.setEnglishTextExtract(false);
-					rdca.setEnglishFileLocation(null);
-					rdca.setEnglishCharFileLocation(null);
-					rdca.setArabicTextExtract(false);
-					rdca.setArabicFileLocation(null);
-					rdca.setArabicCharFileLocation(null);
-					rdca.setPageNo(null);
-					rdca.setRevision(null);
-					rdca.setMiddlePostion(midpoint);
-					rdca.setBilingual(true);
-					rdcaprepracessdata.add(rdca);
-				}
-				else
-				{
-					System.out.println("page is not cropped.");
-
-					rdca.setPhysicalPageNo(i);
-					rdca.setActionid(null);
-					rdca.setRequestid(null);
-					rdca.setPageHasImage(hasimage);
-					rdca.setEnglishTextExtract(false);
-					rdca.setEnglishFileLocation(null);
-					rdca.setEnglishCharFileLocation(null);
-					rdca.setArabicTextExtract(null);
-					rdca.setArabicFileLocation(null);
-					rdca.setArabicCharFileLocation(null);
-					rdca.setPageNo(null);
-					rdca.setRevision(null);
-					rdca.setMiddlePostion(null);
-					rdca.setBilingual(false);
-					rdcaprepracessdata.add(rdca);
-				}
+				int pageWidth = (int) pdpage.getCropBox().getWidth();
+				int pageHeight = (int) pdpage.getCropBox().getHeight();
+//				if (!isImage)
+//				{
+//					if (p.getMidmaximun() >= (int) (0.01 * bufferedImage.getWidth()) && p.getLine() == 0)
+//					{
+//						int midpoint = p.getMidpoint();
+//						System.out.println("3. Page is cropped.");
+//						pdfcrop.parsePdf(reader, i, 0, 0, midpoint, pageHeight,
+//								"C:/Users/ATUL/Desktop/english/pdf/Page" + i + "_Eng.txt");
+//						pdfcrop.parsePdf(reader, i, midpoint, 0, pageWidth - midpoint, pageHeight,
+//								"C:/Users/ATUL/Desktop/english/pdf/Page" + i + "_Ara.txt");
+//					}
+//					else
+//					{
+//						System.out.println("3. Page is not cropped.");
+//						pdfcrop.parsePdf(reader, i, 0, 0, pageWidth, pageHeight,
+//								"C:/Users/ATUL/Desktop/english/pdf/Page" + i + "_Eng.txt");
+//					}
+					pdfcrop.parsePdf(reader, i, 0, pageHeight-p.getY2()-10, pageWidth, pageHeight-p.getY1()+10,
+							"C:/Users/ATUL/Desktop/english/pdf/Page" + i + "_PageInfo.txt");
+//				}
+//				else
+//				{
+//					System.out.println("page is Image");
+//				}
 			}
 		} finally
 		{
@@ -119,7 +111,53 @@ public class Pdf_Cropping
 			raf.close();
 			channel.close();
 			buf.clear();
+			temp.delete();
 		}
+	}
+
+	public void parsePdf(String pdf, String txt) throws IOException
+	{
+		PdfReader reader = new PdfReader(pdf);
+		PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+		PrintWriter out = new PrintWriter(new FileOutputStream(txt));
+		TextExtractionStrategy strategy;
+		for (int i = 1; i <= reader.getNumberOfPages(); i++)
+		{
+			strategy = parser.processContent(i, new SimpleTextExtractionStrategy());
+			out.println(strategy.getResultantText());
+		}
+		out.flush();
+		out.close();
+		Rectangle cropBox = reader.getCropBox(1);
+		int x = (int) cropBox.getLeft();
+		int y = (int) cropBox.getBottom();// (int) bottem;//
+		int width = (int) cropBox.getRight();
+		int height = (int) (cropBox.getTop());// -(cropBox.getTop()*.85)//(int) top;//
+
+		Rectangle selection = new Rectangle(x, y, width, height);
+		RenderFilter renderFilter = new RegionTextRenderFilter(selection);
+		LocationTextExtractionStrategy delegate = new LocationTextExtractionStrategy();
+		TextExtractionStrategy extractionStrategy = new FilteredTextRenderListener(delegate, renderFilter);
+		String text = PdfTextExtractor.getTextFromPage(reader, 1, extractionStrategy);
+		System.out.println(text);
+	}
+
+	public String parsePdf(PdfReader pdfReader, int pageNumber, int x, int y, int width, int height, String txtFilePath)
+			throws IOException
+	{
+		String text = null;
+		PrintWriter out = new PrintWriter(new FileOutputStream(txtFilePath));
+		Rectangle selection = new Rectangle(x, y, width, height);
+		RenderFilter renderFilter = new RegionTextRenderFilter(selection);
+		LocationTextExtractionStrategy delegate = new LocationTextExtractionStrategy();
+		TextExtractionStrategy extractionStrategy = new FilteredTextRenderListener(delegate, renderFilter);
+		text = PdfTextExtractor.getTextFromPage(pdfReader, pageNumber, extractionStrategy);
+		System.out.println("Page Info : "+text);
+		System.out.println("*******************************************************************");
+		out.println(text);
+		out.flush();
+		out.close();
+		return text;
 	}
 
 	Boolean pageHasImage(PDPage page) throws IOException
@@ -128,12 +166,12 @@ public class Pdf_Cropping
 		printer.processStream(page, page.findResources(), page.getContents().getStream());
 		if (printer.isFlag())
 		{
-			System.out.println("page has image.");
+			System.out.println("1. Page has image.");
 			return true;
 		}
 		else
 		{
-			System.out.println("page has not image.");
+			System.out.println("1. Page has not image.");
 			return false;
 		}
 	}
@@ -148,271 +186,7 @@ public class Pdf_Cropping
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g.drawImage(img, 0, 0, null);
 		g.dispose();
-		System.out.println("page is converted into image.");
+		System.out.println("2. page is converted into image.");
 		return bufferedImage;
 	}
-
-	public void pdfProcess(File inputfile) throws Exception
-	{
-		List<RdcaPreProcessData> rdcaprepracessdata = new ArrayList<RdcaPreProcessData>();
-
-		Cropping_Points cp = new Cropping_Points();
-		cp.uncompressXRef(inputfile.getAbsolutePath(), "C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
-		File temp = new File("C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
-
-		PrintImageLocations pil = new PrintImageLocations();
-		Boolean[] imagelist = pil.image(temp);
-		List<BufferedImage> images = cp.pdf_To_BufferedImage1(temp);
-
-		for (int k = 0; k < images.size(); k++)
-		{
-			RdcaPreProcessData rdca = new RdcaPreProcessData();
-			Cropping_Points p = new Cropping_Points();
-
-			BufferedImage img = images.get(k);
-			p = p.cutting_point(img);
-			if (p.getMidmaximun() >= (int) (0.009 * img.getWidth()) && p.getLine() == 0)
-			{
-				int midpoint = (p.getM1() + p.getM2()) / 2;
-				System.out.println("page " + (k + 1) + " is cropped.");
-
-				rdca.setPhysicalPageNo(k + 1);
-
-				rdca.setActionid(null);
-				rdca.setRequestid(null);
-
-				rdca.setPageHasImage(imagelist[k]);
-
-				rdca.setEnglishTextExtract(false);
-				rdca.setEnglishFileLocation(null);
-				rdca.setEnglishCharFileLocation(null);
-
-				rdca.setArabicTextExtract(false);
-				rdca.setArabicFileLocation(null);
-				rdca.setArabicCharFileLocation(null);
-
-				rdca.setPageNo(null);
-				rdca.setRevision(null);
-
-				rdca.setMiddlePostion(midpoint);
-				rdca.setBilingual(true);
-
-				rdcaprepracessdata.add(rdca);
-			}
-			else
-			{
-				System.out.println("page " + (k + 1) + " is not cropped.");
-
-				rdca.setPhysicalPageNo(k + 1);
-
-				rdca.setActionid(null);
-				rdca.setRequestid(null);
-
-				rdca.setPageHasImage(imagelist[k]);
-
-				rdca.setEnglishTextExtract(false);
-				rdca.setEnglishFileLocation(null);
-				rdca.setEnglishCharFileLocation(null);
-
-				rdca.setArabicTextExtract(null);
-				rdca.setArabicFileLocation(null);
-				rdca.setArabicCharFileLocation(null);
-
-				rdca.setPageNo(null);
-				rdca.setRevision(null);
-
-				rdca.setMiddlePostion(null);
-				rdca.setBilingual(false);
-
-				rdcaprepracessdata.add(rdca);
-			}
-		}
-		System.out.println("done");
-	}
-
-	public void cutter_For_PdfTopdf(File file, String englishfile, String arabicfile) throws Exception
-	{
-		Cropping_Points cp = new Cropping_Points();
-		cp.uncompressXRef(file.getAbsolutePath(), "C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
-		File temp = new File("C:/Users/ATUL/Desktop/Page-layout/testing/temp/temp.pdf");
-
-		PrintImageLocations pil = new PrintImageLocations();
-		Boolean[] imagelist = pil.image(temp);
-		List<BufferedImage> images = cp.pdf_To_BufferedImage1(temp);
-
-		InputStream inputstream = new FileInputStream(temp);
-		PdfReader reader = new PdfReader(inputstream);
-
-		OutputStream os1 = new FileOutputStream(englishfile);
-		OutputStream os2 = new FileOutputStream(arabicfile);
-
-		Document document1 = new Document();
-		Document document2 = new Document();
-
-		PdfCopy pdfcopy1 = new PdfCopy(document1, os1);
-		PdfCopy pdfcopy2 = new PdfCopy(document2, os2);
-
-		document1.open();
-		document2.open();
-
-		for (int k = 0; k < images.size(); k++)
-		{
-			BufferedImage img = images.get(k);
-			Cropping_Points p = new Cropping_Points();
-			p = p.cutting_point(img);
-			if (p.getMidmaximun() >= (int) (0.009 * img.getWidth()) && p.getLine() == 0)
-			{
-				int midpoint = (p.getM1() + p.getM2()) / 2;
-				if ((p.getL2() - (int) (0.002 * img.getWidth())) > 0)
-					p.setL2(p.getL2() - (int) (0.002 * img.getWidth()));
-
-				PdfDictionary pageN = reader.getPageN(k + 1);
-				Rectangle cropBox = reader.getCropBox(k + 1);
-
-				PdfArray leftBox = new PdfArray(
-						new float[] { cropBox.getLeft(), cropBox.getBottom(), midpoint / 2, cropBox.getTop() });
-				PdfArray rightBox = new PdfArray(
-						new float[] { midpoint / 2, cropBox.getBottom(), cropBox.getRight(), cropBox.getTop() });
-
-				PdfImportedPage importedPage = pdfcopy1.getImportedPage(reader, k + 1);
-				pageN.put(PdfName.CROPBOX, leftBox);
-				pdfcopy1.addPage(importedPage);
-				pdfcopy1.clearTextWrap();
-
-				pageN.put(PdfName.CROPBOX, rightBox);
-				pdfcopy2.addPage(importedPage);
-				pdfcopy2.clearTextWrap();
-
-				System.out.println("page " + (k + 1) + " is cropped.");
-				//
-				// leftBox.remove(0);
-				// importedPage.reset();
-				float bottem = cropBox.getTop() - (p.getY2() / 2);
-				if (bottem - 5 >= 0)
-				{
-					bottem = bottem - 5;
-				}
-				float top = (float) (bottem + cropBox.getTop() * .03);
-				// leftBox = new PdfArray(new float[] { cropBox.getLeft(), bottem, cropBox.getRight(), top });
-				// importedPage = copy.getImportedPage(reader, k + 1);
-				// pageN.put(PdfName.CROPBOX, leftBox);
-				// copy.addPage(importedPage);
-				// importedPage.reset();
-				//
-				int x = (int) cropBox.getLeft();
-				int y = (int) bottem;// (int) cropBox.getBottom();
-				int width = (int) cropBox.getRight() / 2;
-				int height = (int) top;// (int) (cropBox.getTop());// -(cropBox.getTop()*.85)//
-
-				// final Rectangle selection = new Rectangle(x, y, width, height);
-				// final RenderFilter renderFilter = new RegionTextRenderFilter(selection);
-				// final LocationTextExtractionStrategy delegate = new LocationTextExtractionStrategy();
-				// final TextExtractionStrategy extractionStrategy = new FilteredTextRenderListener(delegate, renderFilter);
-				// String text = PdfTextExtractor.getTextFromPage(reader, k + 1, extractionStrategy);
-				// System.out.println(text);
-				//
-				// String line = text;
-				// String pattern = "((\\d+) [\\w ]+ (\\d+))|(Page (\\d+) [\\w ]+ (\\d+))|(Page (\\d+))";
-				//
-				// // Create a Pattern object
-				// Pattern r = Pattern.compile(pattern);
-				//
-				// // Now create matcher object.
-				// Matcher m = r.matcher(line);
-				// if (m.find())
-				// {
-				// System.out.println("Found group0 value: " + m.group(0));
-				// System.out.println("Found group1 value: " + m.group(1));
-				// System.out.println("Found group2 value: " + m.group(2));
-				// System.out.println("Found group3 value: " + m.group(3));
-				// System.out.println("Found group4 value: " + m.group(4));
-				// System.out.println("Found group5 value: " + m.group(5));
-				//
-				// }
-				// else
-				// {
-				// System.out.println("NO MATCH");
-				// }
-
-			}
-			else
-			{
-				PdfDictionary pageN = reader.getPageN(k + 1);
-				Rectangle cropBox = reader.getCropBox(k + 1);
-				PdfArray leftBox = new PdfArray(
-						new float[] { cropBox.getLeft(), cropBox.getBottom(), p.getR1(), cropBox.getTop() - p.getY1() / 2 });
-				PdfImportedPage importedPage = pdfcopy1.getImportedPage(reader, k + 1);
-				pageN.put(PdfName.CROPBOX, leftBox);
-				pdfcopy1.addPage(importedPage);
-
-				System.out.println("page " + (k + 1) + " is not cropped.");
-
-				leftBox.remove(0);
-				importedPage.reset();
-				float bottem = cropBox.getTop() - (p.getY2() / 2);
-				if (bottem - 5 >= 0)
-				{
-					bottem = bottem - 5;
-				}
-				float top = (float) (bottem + cropBox.getTop() * .03);
-				// leftBox = new PdfArray(new float[] { cropBox.getLeft(), bottem, cropBox.getRight(), top });
-				// importedPage = copy.getImportedPage(reader, k + 1);
-				// pageN.put(PdfName.CROPBOX, leftBox);
-				// copy.addPage(importedPage);
-				// importedPage.reset();
-				//
-				int x = (int) cropBox.getLeft();
-				int y = (int) bottem;// cropBox.getBottom();
-				int width = (int) cropBox.getRight();
-				int height = (int) top;// (cropBox.getTop());// -(cropBox.getTop()*.85)
-
-				// System.out.println("Page number " + (k + 1) + "dimension : left = " + x + " right = " + width + " upper = "
-				// + height + " bottem = " + y);
-				// final Rectangle selection = new Rectangle(x, y, width, height);
-				// final RenderFilter renderFilter = new RegionTextRenderFilter(selection);
-				// final LocationTextExtractionStrategy delegate = new LocationTextExtractionStrategy();
-				// final TextExtractionStrategy extractionStrategy = new FilteredTextRenderListener(delegate, renderFilter);
-				// String text = PdfTextExtractor.getTextFromPage(reader, k + 1, extractionStrategy);
-				// System.out.println(text);
-				//
-				// String line = text;
-				// String pattern = "((\\d+) [\\w ]+ (\\d+))|(Page (\\d+) [\\w ]+ (\\d+))|(Page (\\d+))";
-				//
-				// // Create a Pattern object
-				// Pattern r = Pattern.compile(pattern);
-				//
-				// // Now create matcher object.
-				// Matcher m = r.matcher(line);
-				// if (m.find())
-				// {
-				// System.out.println("Found group0 value: " + m.group(0));
-				// System.out.println("Found group1 value: " + m.group(1));
-				// System.out.println("Found group2 value: " + m.group(2));
-				// System.out.println("Found group3 value: " + m.group(3));
-				// System.out.println("Found group4 value: " + m.group(4));
-				// System.out.println("Found group5 value: " + m.group(5));
-				// }
-				// else
-				// {
-				// System.out.println("NO MATCH");
-				// }
-			}
-
-		}
-		document1.close();
-		document2.close();
-
-		os1.close();
-		os2.close();
-
-		pdfcopy1.close();
-		pdfcopy2.close();
-
-		reader.close();
-		inputstream.close();
-
-		temp.delete();
-		images.clear();
-	}
-
 }
